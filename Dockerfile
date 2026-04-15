@@ -1,9 +1,9 @@
-FROM node:18-alpine AS dependencies
+FROM node:20-alpine AS dependencies
 WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
 
-FROM node:18-alpine
+FROM node:20-alpine
 WORKDIR /app
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY . .
