@@ -1,0 +1,10 @@
+node_modules
+coverage
+.eslintrc.json
+eslint.config.js
+jest.config.js
+Dockerfile
+.dockerignore
+.gitlab-ci.yml
+package-lock.json
+*.md

@@ -1,0 +1,74 @@
+stages:
+  - lint
+  - test
+  - build
+  - deploy
+
+variables:
+  IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+  IMAGE_LATEST: $CI_REGISTRY_IMAGE:latest
+
+lint:
+  stage: lint
+  image: node:18-alpine
+  allow_failure: false
+  only:
+    - dev
+    - merge_requests
+  script:
+    - npm ci
+    - npm run lint
+  cache:
+    key: $CI_COMMIT_REF_SLUG
+    paths:
+      - node_modules/
+
+test:
+  stage: test
+  image: node:18-alpine
+  only:
+    - dev
+    - merge_requests
+  script:
+    - npm ci
+    - npm test
+  coverage: '/Lines\s*:\s*(\d+\.?\d*)%/'
+  artifacts:
+    when: always
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage/cobertura-coverage.xml
+    paths:
+      - coverage/
+    expire_in: 7 days
+  cache:
+    key: $CI_COMMIT_REF_SLUG
+    paths:
+      - node_modules/
+
+build:
+  stage: build
+  image: docker:24
+  services:
+    - docker:24-dind
+  only:
+    - main
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker build -t $IMAGE_TAG -t $IMAGE_LATEST .
+    - docker push $IMAGE_TAG
+    - docker push $IMAGE_LATEST
+
+deploy:
+  stage: deploy
+  image: alpine:latest
+  only:
+    - main
+  needs:
+    - build
+  script:
+    - echo "Imagem publicada no GitHub Registry com sucesso!"
+    - echo "Imagem tag:" $IMAGE_TAG
+    - echo "Imagem latest:" $IMAGE_LATEST
