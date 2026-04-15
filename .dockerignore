@@ -6,5 +6,4 @@ jest.config.js
 Dockerfile
 .dockerignore
 .gitlab-ci.yml
-package-lock.json
 *.md
